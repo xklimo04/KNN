@@ -3,47 +3,68 @@ import re
 
 UNICODE_MAP = {
     # Greek lowercase
-    "α": r"\alpha","β": r"\beta","γ": r"\gamma","δ": r"\delta",
-    "ε": r"\epsilon","ζ": r"\zeta","η": r"\eta","θ": r"\theta",
-    "ι": r"\iota","κ": r"\kappa","λ": r"\lambda","μ": r"\mu",
-    "ν": r"\nu","ξ": r"\xi","ο": r"o","π": r"\pi","ρ": r"\rho",
-    "σ": r"\sigma","τ": r"\tau","υ": r"\upsilon","φ": r"\phi",
-    "χ": r"\chi","ψ": r"\psi","ω": r"\omega",
-    # Greek uppercase
-    "Α": r"A","Β": r"B","Γ": r"\Gamma","Δ": r"\Delta",
-    "Ε": r"E","Ζ": r"Z","Η": r"H","Θ": r"\Theta","Ι": r"I",
-    "Κ": r"K","Λ": r"\Lambda","Μ": r"M","Ν": r"N","Ξ": r"\Xi",
-    "Ο": r"O","Π": r"\Pi","Ρ": r"P","Σ": r"\Sigma","Τ": r"T",
-    "Υ": r"\Upsilon","Φ": r"\Phi","Χ": r"X","Ψ": r"\Psi","Ω": r"\Omega",
+    "α": r"\alpha", "β": r"\beta", "γ": r"\gamma", "δ": r"\delta",
+    "ε": r"\varepsilon", "ζ": r"\zeta", "η": r"\eta", "θ": r"\vartheta",
+    "ι": r"\iota", "κ": r"\kappa", "λ": r"\lambda", "μ": r"\mu",
+    "ν": r"\nu", "ξ": r"\xi", "ο": r"o", "π": r"\pi", "ρ": r"\varrho",
+    "σ": r"\sigma", "τ": r"\tau", "υ": r"\upsilon", "φ": r"\varphi",
+    "χ": r"\chi", "ψ": r"\psi", "ω": r"\omega",
+    
+    # Greek uppercase 
+    "Α": r"A", "Β": r"B", "Γ": r"\Gamma", "Δ": r"\Delta",
+    "Ε": r"E", "Ζ": r"Z", "Η": r"H", "Θ": r"\Theta", "Ι": r"I",
+    "Κ": r"K", "Λ": r"\Lambda", "Μ": r"M", "Ν": r"N", "Ξ": r"\Xi",
+    "Ο": r"O", "Π": r"\Pi", "Ρ": r"P", "Σ": r"\Sigma", "Τ": r"T",
+    "Υ": r"\Upsilon", "Φ": r"\Phi", "Χ": r"X", "Ψ": r"\Psi", "Ω": r"\Omega",
+    
     # Math symbols
-    "∞": r"\infty","≤": r"\le","≥": r"\ge","≠": r"\neq",
-    "∩": r"\cap","∪": r"\cup","∑": r"\sum","∏": r"\prod",
-    "∫": r"\int","∂": r"\partial","∇": r"\nabla","≈": r"\approx",
-    "≃": r"\simeq","≡": r"\equiv","…": r"\dots","±": r"\pm",
-    "∓": r"\mp","×": r"\times","÷": r"\div"
+    "∞": r"\infty", "≤": r"\le", "≥": r"\ge", "≠": r"\neq",
+    "∩": r"\cap", "∪": r"\cup", "∑": r"\sum", "∏": r"\prod",
+    "∫": r"\int", "∂": r"\partial", "∇": r"\nabla", "≈": r"\approx",
+    "≃": r"\simeq", "≡": r"\equiv", "…": r"\dots", "±": r"\pm",
+    "∓": r"\mp", "×": r"\times", "÷": r"/",
+    "·": r"\cdot", "∗": r"*", "‐": r"-", "−": r"-",
+    "|": r"|", "‖": r"\parallel",
 }
 
 CANONICAL_MAP = {
-    r"\leq": r"\le", r"\geq": r"\ge", r"\tfrac": r"\frac", r"\dfrac": r"\frac", r"/": r"\div", r"\to" : r"\rightarrow"
+    r"\leq": r"\le", r"\geq": r"\ge", r"\tfrac": r"\frac", r"\dfrac": r"\frac", r"\div": r"/", r"\to" : r"\rightarrow", r"\gets": r"\leftarrow",
+    r"\varepsilon": r"\epsilon", r"\varphi":r"\phi" , r"\varrho": r"\rho", r"\vartheta":r"\theta", r"\varsigma": r"\sigma",
+    r"\vert": "|", r"\mid": "|", r"\ast": "*", r"\sp": r"^", r"\sb": r"_", r"\bf": r"\mathbf", r"\it": r"\mathit", r"\rm": r"\mathrm", r"\cal": r"\mathcal"
 }
 
-SPACING_COMMANDS = [r"\quad", r"\qquad", r"\,", r"\:", r"\;", r"\!", r"\enspace", r"\thinspace", r"\medspace", r"\thickspace"]
+SPACING_COMMANDS = [r"\quad", r"\qquad", r"\,", r"\:", r"\;", r"\!", r"\enspace", r"\thinspace", r"\medspace", r"\thickspace", r"\hfill", r"\vfill", r"~",
+                    r"\textstyle", r"\displaystyle", r"\scriptstyle", r"\scriptscriptstyle",
+                    r"\smallskip", r"\medskip", r"\bigskip"]
 
 BRACKETS = {
     r"\left(": "(", r"\right)": ")",
     r"\left[": "[", r"\right]": "]",
-    r"\left\{": "{", r"\right\}": "}",
-    r"\left|": "|", r"\right|": "|",
+    r"\left\{": r"\{", r"\right\}": r"\}",
+    r"\left|": r"|", r"\right|": r"|",
     r"\left.": "",  r"\right.": "",
     r"\right(": "(",
     r"\left)": ")",
 }
 
+def normalize_dots(latex: str) -> str:
+    latex = re.sub(r'\.\s*\.\s*\.\s*', r'\\dots ', latex)
+
+    latex = latex.replace(r'\cdots', r'\dots')
+    latex = latex.replace(r'\ldots', r'\dots')
+    
+    latex = re.sub(r'(\\dots\s*){2,}', r'\\dots ', latex)
+    
+    return latex
+
 def clean_latex(latex: str) -> str:
     """
-    Returns a latex string cleaned from spacing commands, \right and \left and with unified commands. 
+    Returns a latex string cleaned from spacing commands, right and left and with unified commands. 
     """
-    latex = re.sub(r'\\hspace\*?\s*\{[^{}]*\}', '', latex)
+    latex = normalize_dots(latex)
+    latex = re.sub(r'\\hspace\*?\s*\{.*?\}', '', latex)
+    latex = re.sub(r'\\vspace\*?\s*\{.*?\}', '', latex)
+    latex = re.sub(r'(?<!\\)\\ ', '', latex) # leave \\
     for sp in SPACING_COMMANDS:
         latex = latex.replace(sp, '')
     for u, l in UNICODE_MAP.items():
@@ -74,7 +95,8 @@ def serialize_node(node):
             tokens.extend(list(text.replace(" ", "")))
         return tokens
 
-    name = getattr(node, "nodeName", "").lower()
+    original_name = getattr(node, "nodeName", "")
+    name = original_name.lower()
 
     # Arrays and matrices
     if name in ["array", "matrix", "pmatrix", "bmatrix", "vmatrix"]:
@@ -149,10 +171,55 @@ def serialize_node(node):
             tokens += serialize_node(c)
         tokens.append("}")
         return tokens
+    
+    # Not
+    if name == "not":
+        tokens.append(f"\\{name}")
+        arg_symbol = node.attributes.get("symbol")
+        tokens.append("{")
+        if arg_symbol:
+            tokens += serialize_node(arg_symbol)
+        tokens.append("}")
+        return tokens
+    
+    # Stackrel
+    if name == "stackrel":
+        tokens.append(f"\\{name}")
+        for arg_name in ["top", "bottom"]:
+            arg_node = node.attributes.get(arg_name)
+            tokens.append("{")
+            if arg_node:
+                tokens += serialize_node(arg_node)
+            tokens.append("}")
+        return tokens
+    
+    # Size commands
+    if name in ["big", "Big", "bigg", "Bigg", "bigl", "Bigl", "biggl", "Biggl", "bigr", "Bigr", "biggr", "Biggr"]:
+        arg_char = node.attributes.get("char") if hasattr(node, "attributes") and node.attributes else None
+        
+        if arg_char:
+            attrs = getattr(arg_char, "attributes", None)
+            if attrs is not None and "modifier" in attrs:
+                tokens.append(attrs["modifier"])
+            else:
+                tokens += serialize_node(arg_char)
+        return tokens
 
+    # Brackets
+    if name in ["left", "right"]:
+        arg_char = node.attributes.get("char") if hasattr(node, "attributes") and node.attributes else None
+        if arg_char:
+            tokens += serialize_node(arg_char)
+        
+        elif hasattr(node, "childNodes"):
+            for c in node.childNodes:
+                tokens += serialize_node(c)
+                
+        return tokens
+    
     # Generic command fallback
     if name and not name.startswith('#') and name not in ["math", "dom-document", "arrayrow", "arraycell", "par"]:
-        command_name = "\\" + name
+        command_name = "\\" + original_name
         tokens.append(canonicalize_token(command_name))
         
         arg_self = getattr(node, "attributes", {}).get("self")
