@@ -24,18 +24,43 @@ UNICODE_MAP = {
     "≃": r"\simeq", "≡": r"\equiv", "…": r"\dots", "±": r"\pm",
     "∓": r"\mp", "×": r"\times", "÷": r"/",
     "·": r"\cdot", "∗": r"*", "‐": r"-", "−": r"-",
-    "|": r"|", "‖": r"\parallel",
+    "|": r"|", "‖": r"\parallel", r"'": r"\prime", r"∋": r"\owns"
 }
 
 CANONICAL_MAP = {
     r"\leq": r"\le", r"\geq": r"\ge", r"\tfrac": r"\frac", r"\dfrac": r"\frac", r"\div": r"/", r"\to" : r"\rightarrow", r"\gets": r"\leftarrow",
-    r"\varepsilon": r"\epsilon", r"\varphi":r"\phi" , r"\varrho": r"\rho", r"\vartheta":r"\theta", r"\varsigma": r"\sigma",
-    r"\vert": "|", r"\mid": "|", r"\ast": "*", r"\sp": r"^", r"\sb": r"_", r"\bf": r"\mathbf", r"\it": r"\mathit", r"\rm": r"\mathrm", r"\cal": r"\mathcal"
+    r"\varepsilon": r"\epsilon", r"\varphi": r"\phi" , r"\varrho": r"\rho", r"\vartheta":r"\theta", r"\varsigma": r"\sigma",
+    r"\vert": "|", r"\mid": "|", r"\ast": "*", r"\sp": r"^", r"\sb": r"_", r"\boldmath": r"\mathbf", r"\bf": r"\mathbf", r"\textbf": r"\mathbf",
+    r"\it": r"\mathit", r"\textit": r"\mathit", r"\tt": r"\mathtt", r"\texttt": r"\mathtt", r"\sf": r"\mathsf", r"\textsf": r"\mathsf", r"\cal" : r"\mathcal",
+    r"\sc": r"\mathrm", r"\scshape": r"\mathrm", r"\colon": r":", r"\dag": r"\dagger", r"\ddag": r"\ddagger", r"\ne": r"\neq", r"cdotp": r"cdot",
+    r"\lbrack": r"[", r"\rbrack": r"]", r"\ni": r"\owns", r"\Longrightarrow": r"\implies", r"\Longleftrightarrow": r"\iff", r"\not=": r"\neq",
+    r"\arrowvert": r"|", r"\longrightarrow": r"\rightarrow", r"\longleftarrow": r"\leftarrow", r"\longmapsto": r"\mapsto", r"\longleftrightarrow": r"\leftrightarrow",
+    r"\hookrightarrow": r"\rightarrow", r"\Rightarrow": r"\implies", r"\Leftarrow": r"\impliedby", r"\Leftrightarrow": r"\iff", r"\land": r"\wedge",
+    r"\lor": r"\vee", r"\Updownarrow": r"\updownarrow",
 }
 
-SPACING_COMMANDS = [r"\quad", r"\qquad", r"\,", r"\:", r"\;", r"\!", r"\enspace", r"\thinspace", r"\medspace", r"\thickspace", r"\hfill", r"\vfill", r"~",
-                    r"\textstyle", r"\displaystyle", r"\scriptstyle", r"\scriptscriptstyle",
-                    r"\smallskip", r"\medskip", r"\bigskip"]
+SPACING_COMMANDS = [r"\quad", r"\qquad", r"\,", r"\:", r"\;", r"\!", r"~", r"\*", r"\-", r"\/"]
+
+IGNORED_COMMANDS = [
+    r"\label", r"\ref", r"\cite", r"\nonumber", r"\notag", 
+    r"\protect", r"\separate", r"\stepcounter", r"\setcounter",
+    r"\setlength", r"\unitlength", r"\vspace", r"\hspace",
+    r"\rule", r"\vrule", r"\hrule", r"\strut", r"\relax",
+    r"\centerline", r"\left.", r"\right.", r"\active",
+    r"\mathversion", r"\labelsep", r"\extracolsep",
+    r"\Huge", r"\huge", r"\LARGE", r"\Large", 
+    r"\large", r"\normalsize", r"\small", r"\tiny",
+    r"\scriptsize", r"\footnotesize", r"\hfil", r"\hss", r"\vss", r"\vskip", r"\kern", r"\mkern", r"\mskip",
+    r"\thicklines", r"\linethickness", r"\unitlength", r"\arraycolsep",
+    r"\special", r"\leavevmode", r"\relax", r"\do", r"\crcr",
+    r"\protectE", r"\protectZ", r"\protecte", r"\protectm", r"\protectu",
+    r"\noalign", r"\nonumber", r"\label", r"\cite", r"\ref",
+    r"\mathstrut", r"\strut", r"\vphantom", r"\hphantom", r"\phantom",
+    r"\footnotemark", r"\enskip", r"\enspace", r"\thinspace", r"\medspace", r"\thickspace", r"\hfill", r"\vfill",
+    r"\textstyle", r"\displaystyle", r"\scriptstyle", r"\scriptscriptstyle",
+    r"\smallskip", r"\medskip", r"\bigskip", r"\space", r"\nolinebreak"
+
+]
 
 BRACKETS = {
     r"\left(": "(", r"\right)": ")",
@@ -46,6 +71,43 @@ BRACKETS = {
     r"\right(": "(",
     r"\left)": ")",
 }
+
+MATRIX_BRACKETS_MAP = {
+        'pmatrix': (r'(', r')'),
+        'bmatrix': (r'[', r']'),
+        'vmatrix': (r'|', r'|'),
+        'matrix':  ('', ''),
+        'cases':   (r'\{', '.')
+}
+
+def preprocess_matrices(latex: str) -> str:
+    for env, (left, right) in MATRIX_BRACKETS_MAP.items():
+
+        pattern = r'\\begin\{' + env + r'\}(.*?)\\end\{' + env + r'\}'
+        
+        def replace_with_array(match):
+            content = match.group(1).strip()
+            
+            # Get colspec
+            rows = content.split(r'\\')
+            max_cols = 0
+            for row in rows:
+                if row.strip():
+                    cols = row.count('&') + 1
+                    max_cols = max(max_cols, cols)
+            
+            if max_cols == 0: max_cols = 1
+            col_spec = 'c' * max_cols
+            
+            res = ""
+            if left: res += f"\\left{left} "
+            res += f"\\begin{{array}}{{{col_spec}}} {content} \\end{{array}}"
+            if right: res += f" \\right{right}"
+            return res
+
+        latex = re.sub(pattern, replace_with_array, latex, flags=re.DOTALL)
+    
+    return latex
 
 def normalize_dots(latex: str) -> str:
     latex = re.sub(r'\.\s*\.\s*\.\s*', r'\\dots ', latex)
@@ -62,6 +124,11 @@ def clean_latex(latex: str) -> str:
     Returns a latex string cleaned from spacing commands, right and left and with unified commands. 
     """
     latex = normalize_dots(latex)
+    latex = preprocess_matrices(latex)
+    latex = re.sub(r'\\\\\s*$', '', latex)
+    latex = re.sub(r'\\vphantom\*?\s{.*?\}', '', latex)
+    latex = re.sub(r'\\hphantom\*?\s{.*?\}', '', latex)
+    latex = re.sub(r'\\phantom\*?\s{.*?\}', '', latex)
     latex = re.sub(r'\\hspace\*?\s*\{.*?\}', '', latex)
     latex = re.sub(r'\\vspace\*?\s*\{.*?\}', '', latex)
     latex = re.sub(r'(?<!\\)\\ ', '', latex) # leave \\
@@ -97,16 +164,21 @@ def serialize_node(node):
 
     original_name = getattr(node, "nodeName", "")
     name = original_name.lower()
+    command_name = "\\" + original_name
 
-    # Arrays and matrices
-    if name in ["array", "matrix", "pmatrix", "bmatrix", "vmatrix"]:
+    # Ignored commands
+    if command_name in IGNORED_COMMANDS or f"\\{name}" in IGNORED_COMMANDS:
+        return []
+
+    # Arrays
+    if name == "array":
         tokens.append(f"\\begin{{{name}}}")
         
         if name == "array" and hasattr(node, "attributes"):
             # Get columns specification
             colspec_raw = node.attributes.get("colspec", "")
             if isinstance(colspec_raw, list) or "[" in str(colspec_raw):
-                colspec_parsed = [c for c in str(colspec_raw) if c in "lcr"]
+                colspec_parsed = ['c' for c in str(colspec_raw) if c in "lcr"]
                 if colspec_parsed:
                     colspec_parsed = " ".join(colspec_parsed)
                     tokens.append("{")
@@ -156,12 +228,21 @@ def serialize_node(node):
         return tokens
 
     # Styles
-    if name in ["cal", "bf", "it", "mathbf", "mathcal"]:
-        tokens.append(f"\\{name}")
-        tokens.append("{")
-        for c in node.childNodes:
-            tokens += serialize_node(c)
-        tokens.append("}")
+    if name in ["cal", "bf", "it", "mathbf", "mathcal", "mathrm", "mathit", "mathsf", "mathtt", "boldmath", "textbf", "textit", "tt", "mathtt", "texttt", "sf", "mathsf", "textsf", "sc", "mathrm", "scshape"]: 
+        canon_style = canonicalize_token(command_name)
+        if canon_style:
+            tokens.append(canon_style)
+            
+            inner_tokens = []
+            for c in node.childNodes:
+                inner_tokens += serialize_node(c)
+            
+            if inner_tokens and inner_tokens[0] == "{" and inner_tokens[-1] == "}":
+                tokens += inner_tokens
+            else:
+                tokens.append("{")
+                tokens += inner_tokens
+                tokens.append("}")
         return tokens
     
     # Groups
@@ -194,7 +275,7 @@ def serialize_node(node):
         return tokens
     
     # Size commands
-    if name in ["big", "Big", "bigg", "Bigg", "bigl", "Bigl", "biggl", "Biggl", "bigr", "Bigr", "biggr", "Biggr"]:
+    if name in ["big", "Big", "bigg", "Bigg", "bigl", "Bigl", "biggl", "Biggl", "bigr", "Bigr", "biggr", "Biggr", "Biggm", "Bigm", "biggm", "bigm"]:
         arg_char = node.attributes.get("char") if hasattr(node, "attributes") and node.attributes else None
         
         if arg_char:
@@ -215,6 +296,13 @@ def serialize_node(node):
             for c in node.childNodes:
                 tokens += serialize_node(c)
                 
+        return tokens
+    
+    # Raise / Raisebox
+    if name in ["raise", "raisebox"]:
+        if hasattr(node, "childNodes"):
+            for c in node.childNodes:
+                tokens += serialize_node(c)
         return tokens
     
     # Generic command fallback
