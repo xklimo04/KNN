@@ -24,7 +24,8 @@ UNICODE_MAP = {
     "≃": r"\simeq", "≡": r"\equiv", "…": r"\dots", "±": r"\pm",
     "∓": r"\mp", "×": r"\times", "÷": r"/",
     "·": r"\cdot", "∗": r"*", "‐": r"-", "−": r"-",
-    "|": r"|", "‖": r"\parallel", r"'": r"\prime", r"∋": r"\owns"
+    "|": r"|", "‖": r"\parallel", r"'": r"\prime", r"∋": r"\owns",
+    "–": r"-", "—": r"-", "‘": r"'"
 }
 
 CANONICAL_MAP = {
@@ -36,7 +37,7 @@ CANONICAL_MAP = {
     r"\lbrack": r"[", r"\rbrack": r"]", r"\ni": r"\owns", r"\Longrightarrow": r"\implies", r"\Longleftrightarrow": r"\iff", r"\not=": r"\neq",
     r"\arrowvert": r"|", r"\longrightarrow": r"\rightarrow", r"\longleftarrow": r"\leftarrow", r"\longmapsto": r"\mapsto", r"\longleftrightarrow": r"\leftrightarrow",
     r"\hookrightarrow": r"\rightarrow", r"\Rightarrow": r"\implies", r"\Leftarrow": r"\impliedby", r"\Leftrightarrow": r"\iff", r"\land": r"\wedge",
-    r"\lor": r"\vee", r"\Updownarrow": r"\updownarrow",
+    r"\lor": r"\vee", r"\Updownarrow": r"\updownarrow", r"\|": r"\parallel"
 }
 
 SPACING_COMMANDS = [r"\quad", r"\qquad", r"\,", r"\:", r"\;", r"\!", r"~", r"\*", r"\-", r"\/"]
