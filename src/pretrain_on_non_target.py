@@ -38,8 +38,12 @@ def collate_fn(batch, processor):
 def main(args):
 
     # Define paths
-    processor_dir = os.path.join(args.project_dir, "models/trocr_processor")
-    model_dir = os.path.join(args.project_dir, "models/trocr_model")
+    if args.model_dir is None:
+        processor_dir = os.path.join(args.project_dir, "models/trocr_processor")
+        model_dir = os.path.join(args.project_dir, "models/trocr_model")
+    else:
+        processor_dir = os.path.join(args.project_dir, args.model_dir)
+        model_dir = os.path.join(args.project_dir, args.model_dir)
     dataset_dir = os.path.join(args.project_dir, "datasets/im2latex-100k-norm")
     os.makedirs(args.output_dir, exist_ok=True)
     print (processor_dir, model_dir, args.output_dir, dataset_dir)
@@ -59,13 +63,15 @@ def main(args):
         early_stopping=args.early_stopping
     )
 
-    if args.freeze_encoder:
-        for param in model.encoder.parameters():
+    for param in model.encoder.parameters():
+        if args.freeze_encoder:
             param.requires_grad = False
+        else:
+            param.requires_grad = True
 
     # Load dataset from disk
     dataset = load_from_disk(dataset_dir)
-    train_dataset = Im2LatexDataset(dataset['train'], augment=True)
+    train_dataset = Im2LatexDataset(dataset['train'], augment=args.augment)
     val_dataset = Im2LatexDataset(dataset['val'], augment=False)
 
     training_args = Seq2SeqTrainingArguments(
@@ -119,7 +125,8 @@ if __name__ == "__main__":
     parser.add_argument("--num_beams", type=int, default=4)
     parser.add_argument("--max_length", type=int, default=256)
     parser.add_argument("--early_stopping", action="store_true")
-    parser.add_argument("--warmup_ratio", type=float, default=0.1)
+    parser.add_argument("--model_dir", type=str)
+    parser.add_argument("--augment", action="store_true")
 
     args = parser.parse_args()
 

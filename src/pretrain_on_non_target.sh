@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -N pretrain_on_non_target
 #PBS -l select=1:ncpus=4:ngpus=1:mem=32gb:scratch_local=60gb:gpu_cap=sm_70
-#PBS -l walltime=2:00:00
+#PBS -l walltime=10:00:00
 
 PROJECT=KNN
 PROJECT_DIR=/storage/brno2/home/$USER/$PROJECT
@@ -26,17 +26,17 @@ cd $SCRATCHDIR/$PROJECT
 
 echo "learning started" >> $PROJECT_DIR/jobs_info.txt
 
-python src/pretrain_on_non_target.py \
+python -m src.pretrain_on_non_target \
     --batch_size 16 \
     --lr 5e-5 \
-    --epochs 10 \
+    --epochs 20 \
     --project_dir $SCRATCHDIR/$PROJECT \
     --output_dir $PROJECT_DIR/results \
     --freeze_encoder \
     --num_beams 4 \
     --max_length 256 \
     --early_stopping \
-    --warmup_ratio 0.1
+    --augment
 
 echo "learning ended" >> $PROJECT_DIR/jobs_info.txt
 
