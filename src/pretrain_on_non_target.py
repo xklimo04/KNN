@@ -9,7 +9,7 @@ from transformers import (
 )
 from datasets import load_from_disk
 from src.im2latexDataset import Im2LatexDataset
-from src.evaluation.evaluate import get_compute_metrics
+from src.evaluation.compute_metrics import get_compute_metrics
 from src.logger import LoggerCallback
 
 
