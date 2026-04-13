@@ -17,5 +17,5 @@ print(f"Added {added_tokens} new tokens to the tokenizer.")
 model.decoder.resize_token_embeddings(len(processor.tokenizer))
 
 # Save model
-processor.save_pretrained("./models/trocr_processor")
-model.save_pretrained("./models/trocr_model")
+processor.save_pretrained("./models/trocr/trocr_processor")
+model.save_pretrained("./models/trocr/trocr_model")

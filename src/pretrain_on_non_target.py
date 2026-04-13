@@ -39,8 +39,8 @@ def main(args):
 
     # Define paths
     if args.model_dir is None:
-        processor_dir = os.path.join(args.project_dir, "models/trocr_processor")
-        model_dir = os.path.join(args.project_dir, "models/trocr_model")
+        processor_dir = os.path.join(args.project_dir, "models/trocr/trocr_processor")
+        model_dir = os.path.join(args.project_dir, "models/trocr/trocr_model")
     else:
         processor_dir = os.path.join(args.project_dir, args.model_dir)
         model_dir = os.path.join(args.project_dir, args.model_dir)
