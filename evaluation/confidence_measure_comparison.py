@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import argparse
 from sklearn.metrics import auc
 
-def compute_curve(df, performance_measure):
+def compute_curve(df, performance_measure, ascending=False):
     # Sort by selected confidence measure column
-    df_sorted = df.sort_values(by=performance_measure, ascending=False).reset_index(drop=True)
+    df_sorted = df.sort_values(by=performance_measure, ascending=ascending).reset_index(drop=True)
 
     cer_values = df_sorted["CER"].values
 
@@ -30,18 +30,19 @@ def main(args):
 
     # For all performance measures
     for col in df.columns.tolist()[3:]:
-        fractions, cum_avg_cer = compute_curve(df, col)
+        ascending = "entropy" in col.lower()
+        fractions, cum_avg_cer = compute_curve(df, col, ascending=ascending)
         curves[col] = fractions, cum_avg_cer
         aucs[col] = auc(fractions, cum_avg_cer)
 
     # Optimal performance measure
-    fractions, cum_avg_cer = compute_curve(df, "CER")
+    fractions, cum_avg_cer = compute_curve(df, "CER", ascending=True)
     curves["optimal"] = fractions, cum_avg_cer
     aucs["optimal"] = auc(fractions, cum_avg_cer)
 
     # Random selection performance measure
-    df_shuffled = df.sample(frac=1, random_state=42)
-    fractions, cum_avg_cer = compute_curve(df_shuffled, "CER")
+    df["random_rank"] = np.random.permutation(df.shape[0])
+    fractions, cum_avg_cer = compute_curve(df, "random_rank")
     curves["random"] = fractions, cum_avg_cer
     aucs["random"] = auc(fractions, cum_avg_cer)
 
