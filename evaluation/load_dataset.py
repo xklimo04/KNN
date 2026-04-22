@@ -25,6 +25,16 @@ class Im2LatexDataset(Dataset):
             image = Image.open(img_path).convert('RGB')
         else:
             image = self.dataset["image"].iloc[idx].convert('RGB')
+
+        w, h = image.size
+        aspect_ratio = w / h
+        target_width = int(64 * aspect_ratio)
+        image = image.resize((target_width, 64), Image.Resampling.LANCZOS)
+        # canvas = Image.new("RGB", (384, 384), (255, 255, 255))
+        # canvas.paste(image, (0, (384 - image.size[1]) // 2))
+
+        # image=canvas
+        
         text = self.dataset['formula'].iloc[idx]
 
         pixel_values = self.processor(image, return_tensors='pt').pixel_values
