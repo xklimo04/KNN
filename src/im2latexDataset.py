@@ -2,6 +2,7 @@ import albumentations as A
 import cv2
 import numpy as np
 from torch.utils.data import Dataset
+from PIL import Image
 
 # Augmentation pipeline
 aug_pipeline = A.Compose([
@@ -17,6 +18,16 @@ aug_pipeline = A.Compose([
         border_mode=cv2.BORDER_CONSTANT,
         fill=(255, 255, 255),
         p=0.7
+    ),
+    A.OneOf([
+        A.Morphological(p=1.0, scale=(2, 3), operation="dilation"),
+        A.Morphological(p=1.0, scale=(2, 3), operation="erosion"),
+        ], p=0.2
+    ),
+    A.OneOf([
+        A.GaussianBlur(blur_limit=3, p=0.5),
+        A.MotionBlur(blur_limit=3, p=0.5),
+        ], p=0.3
     ),
     A.RandomBrightnessContrast(
         brightness_limit=0.1,
@@ -56,6 +67,7 @@ class Im2LatexDataset(Dataset):
         if self.augment: 
             image = aug_pipeline(image=image)["image"] 
 
+        image = Image.fromarray(image)
         return { 
             "image": image, 
             "formula": formula

@@ -11,11 +11,12 @@ from datasets import load_from_disk
 from src.im2latexDataset import Im2LatexDataset
 from src.evaluation.compute_metrics import get_compute_metrics
 from src.logger import LoggerCallback
+from PIL import Image
 
 
 def collate_fn(batch, processor):
 
-    images = [x["image"] for x in batch]
+    images = [x["image"].convert("RGB") for x in batch]
     formulas = [x["formula"] for x in batch]
 
     pixel_values = processor(images=images, return_tensors="pt").pixel_values
