@@ -2,26 +2,44 @@ import numpy as np
 import editdistance
 
 def get_compute_metrics(processor):
+
     def compute_metrics(eval_pred):
         preds, labels = eval_pred
 
-        labels = np.where(labels == -100, processor.tokenizer.pad_token_id, labels)
+        pad_id = processor.tokenizer.pad_token_id
+        bos_id = processor.tokenizer.cls_token_id
+        eos_id = processor.tokenizer.sep_token_id
 
-        pred_str = processor.batch_decode(preds, skip_special_tokens=True)
-        label_str = processor.batch_decode(labels, skip_special_tokens=True)
+        total_distance = 0
+        total_tokens = 0
+        exact_matches = 0
 
-        pred_tokens = [p.split() for p in pred_str]
-        label_tokens = [g.split() for g in label_str]
+        for pred, label in zip(preds, labels):
 
-        cer = sum(
-            editdistance.eval(p, g) / max(len(g), 1)
-            for p, g in zip(pred_tokens, label_tokens)
-        ) / len(pred_tokens)
+            label = [
+                int(x) for x in label
+                if x not in (-100, pad_id, bos_id, eos_id)
+            ]
 
-        acc = sum(p == g for p, g in zip(pred_tokens, label_tokens)) / len(pred_tokens)
+            pred = [
+                int(x) for x in pred
+                if x not in (pad_id, bos_id, eos_id)
+            ]
+
+            distance = editdistance.eval(pred, label)
+
+            total_distance += distance
+            total_tokens += len(label)
+
+            if pred == label:
+                exact_matches += 1
+
+        cer = total_distance / max(total_tokens, 1)
+        acc = exact_matches / len(preds)
 
         return {
             "cer": cer,
             "accuracy": acc
         }
+
     return compute_metrics
