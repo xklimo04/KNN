@@ -1,10 +1,9 @@
-from evaluate import load as load_metric
+import editdistance
+import torch
 
 def normalize(s):
+    return s.strip()
 
-    return s.replace(" ", "")
-
-cer_metric = load_metric("cer")
 def compute_cer(pred_ids, label_ids, processor):
     """
     Compute the Character Error Rate (CER) between predicted and label sequences.
@@ -17,13 +16,36 @@ def compute_cer(pred_ids, label_ids, processor):
     Returns:
         float: The computed Character Error Rate (CER).
     """
-    pred_str = processor.batch_decode(pred_ids, skip_special_tokens=True)
-    label_ids[label_ids == -100] = processor.tokenizer.pad_token_id
-    label_str = processor.batch_decode(label_ids, skip_special_tokens=True)
+    total_distance = 0
+    total_tokens = 0
 
-    pred_str = [normalize(s) for s in pred_str]
-    label_str= [normalize(s) for s in label_str]
+    pad_id = processor.tokenizer.pad_token_id
+    bos_id = processor.tokenizer.cls_token_id
+    eos_id = processor.tokenizer.sep_token_id
 
-    cer = cer_metric.compute(predictions=pred_str, references=label_str)
+    if isinstance(pred_ids, torch.Tensor):
+        pred_ids = pred_ids.tolist()
 
-    return cer
+    if isinstance(label_ids, torch.Tensor):
+        label_ids = label_ids.tolist()
+
+    for pred, label in zip(pred_ids, label_ids):
+
+        label = [
+            x for x in label
+            if x not in (-100, pad_id, bos_id, eos_id)
+        ]
+
+        pred = [
+            x for x in pred
+            if x not in (pad_id, bos_id, eos_id)
+        ]
+
+        distance = editdistance.eval(pred, label)
+
+        total_distance += distance
+        total_tokens += len(label)
+
+    if total_tokens == 0:
+        return 0.0
+    return total_distance / total_tokens

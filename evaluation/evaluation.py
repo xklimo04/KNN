@@ -8,6 +8,7 @@ from computecer import compute_cer
 from load_dataset import Im2LatexDataset
 import torch.nn.functional as F
 import gc
+from latex_validity import is_latex_valid
 
 
 parser = argparse.ArgumentParser(description="Validation on target dataset")
@@ -27,10 +28,12 @@ model.to('cuda')
 model.eval()
 
 data_df = pd.read_csv(args.target_path + "/valid.csv")
+train_end = int(len(data_df) * 0.8)
+val_end = int(len(data_df) * 0.9)
 if args.eval == 'valid':
-    data_df = data_df.iloc[:1100]
+    data_df = data_df.iloc[train_end:val_end]
 else:
-    data_df = data_df.iloc[1100:]
+    data_df = data_df.iloc[val_end:]
     
 valid_data = Im2LatexDataset(data_df, processor, df=True, path_to_images=args.target_path + "/images/")
 
@@ -85,6 +88,7 @@ with torch.no_grad():
         mean_sequence_entropy = sum(token_entropies) / len(token_entropies)
 
         for text, conf in zip(generated_text, confidences):
+            mean_prob_with_latex_check = mean_prob * is_latex_valid(text)
             results.append({
                 "text": text,
                 "ground truth": label_str,
@@ -92,7 +96,8 @@ with torch.no_grad():
                 "posterior probability": conf,
                 "mean sequence probability": mean_prob,
                 "min sequence probability": min_prob,
-                "mean sequence entropy": mean_sequence_entropy
+                "mean sequence entropy": mean_sequence_entropy,
+                "mean sequence probablity with latex check": mean_prob_with_latex_check
             })
         
         del outputs
@@ -100,7 +105,7 @@ with torch.no_grad():
         torch.cuda.empty_cache()
     
 total_cer = valid_cer / len(valid_data)
-# print(f"Total CER: {total_cer}")
+print(f"Total CER: {total_cer}")
 # results.append({
 #     "text" : "TOTAL CER",
 #     "ground truth": "",
