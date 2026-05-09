@@ -44,7 +44,8 @@ else:
 
 results = []
 valid_cer = 0.0
-
+exact_match_count = 0
+total_samples = 0
 
 with torch.no_grad():
     print("Started evaluation...\n")
@@ -68,6 +69,15 @@ with torch.no_grad():
 
         generated_text = processor.batch_decode(outputs.sequences[0], skip_special_tokens=True)
         label_str = label_str[0]
+
+        pred = generated_text[0].strip()
+        gt = label_str.strip()
+        pred = " ".join(pred.split())
+        gt = " ".join(gt.split())
+
+        total_samples += 1
+        if pred == gt:
+            exact_match_count += 1
 
         cer = compute_cer(pred_ids = outputs.sequences, label_ids=label_ids, processor=processor)
         valid_cer += cer
@@ -115,8 +125,10 @@ with torch.no_grad():
         gc.collect()
         torch.cuda.empty_cache()
     
-total_cer = valid_cer / len(valid_data)
-print(f"Total CER: {total_cer}")
+total_cer = valid_cer / total_samples
+print(f"Total CER: {total_cer:.4f}")
+exact_match_accuracy = exact_match_count / total_samples
+print(f"Exact Match Accuracy: {exact_match_accuracy:.4f}")
 # results.append({
 #     "text" : "TOTAL CER",
 #     "ground truth": "",
