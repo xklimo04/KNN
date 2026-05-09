@@ -46,18 +46,26 @@ def main(args):
     curves["random"] = fractions, cum_avg_cer
     aucs["random"] = auc(fractions, cum_avg_cer)
 
-    plt.figure()
+    plt.figure(figsize=(12, 8))
 
     for name, (fractions, cum_avg_cer) in curves.items():
         plt.plot(fractions, cum_avg_cer, label=f"{name} (AUC={aucs[name]:.3f})")
 
-    plt.xlabel("Fraction of selected data")
-    plt.ylabel("Cumulative CER")
-    plt.title("Predictive Power of Confidence Measures")
-    plt.legend()
+    plt.xlabel("Fraction of selected data", fontsize=16)
+    plt.ylabel("Cumulative CER", fontsize=16)
+    plt.title("Predictive Power of Confidence Measures", fontsize=18)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
     plt.grid()
-
-    plt.savefig(args.output_file)
+    plt.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.15),
+        ncol=2,
+        fontsize=16
+    )
+    plt.subplots_adjust(bottom=0.25)
+    plt.tight_layout()
+    plt.savefig(args.output_file, bbox_inches="tight")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
