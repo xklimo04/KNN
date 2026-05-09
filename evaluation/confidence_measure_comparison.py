@@ -30,7 +30,7 @@ def main(args):
 
     # For all performance measures
     for col in df.columns.tolist()[3:]:
-        ascending = "entropy" in col.lower()
+        ascending = "entropy" in col.lower() or "probability variance" in col.lower() or "low confidence ratio" in col.lower()
         fractions, cum_avg_cer = compute_curve(df, col, ascending=ascending)
         curves[col] = fractions, cum_avg_cer
         aucs[col] = auc(fractions, cum_avg_cer)

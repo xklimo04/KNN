@@ -5,7 +5,7 @@ from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 import pandas as pd
 import argparse
 from computecer import compute_cer
-from load_dataset import Im2LatexDataset
+from load_dataset import Im2LatexDataset, Im2LatexCanvasDataset
 import torch.nn.functional as F
 import gc
 from latex_validity import is_latex_valid
@@ -34,8 +34,13 @@ if args.eval == 'valid':
     data_df = data_df.iloc[train_end:val_end]
 else:
     data_df = data_df.iloc[val_end:]
-    
-valid_data = Im2LatexDataset(data_df, processor, df=True, path_to_images=args.target_path + "/images/")
+
+if "transform" in args.proc_path:
+    processor.image_processor.do_resize = False
+    processor.image_processor.do_center_crop = False     
+    valid_data = Im2LatexCanvasDataset(data_df, processor, df=True, path_to_images=args.target_path + "/images/")   
+else:
+    valid_data = Im2LatexDataset(data_df, processor, df=True, path_to_images=args.target_path + "/images/")
 
 results = []
 valid_cer = 0.0
@@ -86,6 +91,9 @@ with torch.no_grad():
         mean_prob = probs[0].mean().item()
         min_prob = probs[0].min().item()
         mean_sequence_entropy = sum(token_entropies) / len(token_entropies)
+        prob_variance = probs[0].var().item()
+        low_conf_ratio = (probs[0] < 0.5).float().mean().item()
+        combined_score = 0.4 * mean_prob - 0.4 * mean_sequence_entropy - 0.2 * low_conf_ratio
 
         for text, conf in zip(generated_text, confidences):
             mean_prob_with_latex_check = mean_prob * is_latex_valid(text)
@@ -97,7 +105,10 @@ with torch.no_grad():
                 "mean sequence probability": mean_prob,
                 "min sequence probability": min_prob,
                 "mean sequence entropy": mean_sequence_entropy,
-                "mean sequence probablity with latex check": mean_prob_with_latex_check
+                "mean sequence probablity with latex check": mean_prob_with_latex_check,
+                "probability variance": prob_variance,
+                "low confidence ratio": low_conf_ratio,
+                "combined score": combined_score * is_latex_valid(text)
             })
         
         del outputs
