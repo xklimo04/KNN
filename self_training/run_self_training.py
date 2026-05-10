@@ -27,6 +27,7 @@ if __name__ == "__main__":
     parser.add_argument("--train_data_path_images", type=str, required=True)
     parser.add_argument("--zip_path", type=str, required=True)
     parser.add_argument("--iterations", type=int, required=True)
+    parser.add_argument("--percent_to_take", type=float, default=0.01)
 
     args = parser.parse_args()
 
@@ -77,7 +78,7 @@ if __name__ == "__main__":
         val=val_df_clean,
         unlabeled_df=unlabeled_df,
         basemodel=trainermodel,
-        conf_threshold=0.01
+        conf_threshold=args.percent_to_take
     )
 
     print(f"Started self training. Found {len(unlabeled_df)} unlabeled samples.")
