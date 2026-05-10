@@ -101,3 +101,22 @@ python -m src.finetune_on_target \
 ```
 
 ## Self-training
+
+1. Prepare finetuned model from previous part.
+2. Prepare the target dataset from https://huggingface.co/datasets/Veronika02/target/tree/main
+3. Prepare target images from /mnt/matylda1/ikiss/data/knn_math_expressions/data
+4. Run self-training:
+   ```
+   python run_self_training.py \
+       --batch_size 16 \
+       --lr 5e-6 \
+       --epochs 5 \
+       --output_dir self_training_output \
+       --max_length 256 \
+       --num_beams 4 \
+       --augment \
+       --freeze_encoder \
+       --project_dir . \
+       --model_dir  \
+       --target_path crops.02
+   ```
