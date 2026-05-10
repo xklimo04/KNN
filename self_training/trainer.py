@@ -32,10 +32,17 @@ class Trainer():
     def collate_fn_train(self, batch):
         batch = [x for x in batch if x is not None]
         if len(batch) == 0:
-            return None
+            return {
+                "pixel_values": torch.zeros((1, 3, 384, 384)),
+                "labels": torch.full((1, self.args.max_length), -100)
+            }
+
+
 
         pixel_values = torch.stack([x["pixel_values"] for x in batch])
         labels = torch.stack([x["labels"] for x in batch])
+        # if pixel_values.shape[-1] != 384 or pixel_values.shape[-2] != 384:
+        #   pixel_values = torch.nn.functional.interpolate(pixel_values, size=(384, 384))
 
         return {
             "pixel_values": pixel_values,
@@ -103,7 +110,7 @@ class Trainer():
 
         trainer.train()
 
-        trainer.save_model(f"output-second-stage-{it}")
+        trainer.save_model(f"self-training-second-stage-{it}")
 
     def predict(self, dataset_df):
       predict_dataset = TargetDataset(
