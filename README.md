@@ -118,5 +118,12 @@ python -m src.finetune_on_target \
        --freeze_encoder \
        --project_dir . \
        --model_dir  \
-       --target_path crops.02
+       --target_path crops.02 \
+       --iterations 3 \
+       --train_data_path valid.csv \
+       --train_data_path_images valid/valid/dataset/target/images \
+       --percent_to_take 0.1 \
+       --zip_path crops.02.zip
+       
+       
    ```
